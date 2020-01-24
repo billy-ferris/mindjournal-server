@@ -56,6 +56,46 @@ describe('Logs Endpoints', function() {
         })
     })
 
+    describe(`GET /api/logs/:id`, () => {
+        context('Given no logs', () => {
+            it('responds with a 404', () => {
+                const id = 12345
+                return supertest(app)
+                    .get(`/api/logs/${id}`)
+                    .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                    .expect(404, {
+                        error: { message: 'Log not found' }
+                    })
+            })
+        })
+
+        context('Given there are logs in the database', () => {
+            const testUsers = makeUsersArray()
+            const testLogs = makeLogsArray()
+
+            beforeEach('insert logs', () => {
+                return db
+                    .into('users')
+                    .insert(testUsers)
+                    .then(() => {
+                        return db
+                            .into('logs')
+                            .insert(testLogs)
+                    })
+            })
+
+            it('responds with a 200 and the log with id', () => {
+                const idToGet = 2
+                const expectedLog = testLogs[idToGet - 1]
+
+                return supertest(app)
+                    .get(`/api/logs/${idToGet}`)
+                    .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                    .expect(200, expectedLog)
+            })
+        })
+    })
+
     describe(`POST /api/logs`, () => {
         const testUsers = makeUsersArray()
 
