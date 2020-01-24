@@ -21,7 +21,7 @@ describe('Reflections Endpoints', function() {
 
     afterEach('clean the table', () =>  db.raw('TRUNCATE logs, reflections, users'))
 
-    describe.only(`GET /api/reflections`, () => {
+    describe(`GET /api/reflections`, () => {
         context('Given no reflections', () => {
             it('responds with a 200 and an empty list', () => {
                 return supertest(app)
@@ -51,6 +51,46 @@ describe('Reflections Endpoints', function() {
                     .get('/api/reflections')
                     .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
                     .expect(200, testReflections)
+            })
+        })
+    })
+
+    describe.only(`GET /api/reflections`, () => {
+        context('Given no reflections', () => {
+            it('responds with a 404', () => {
+                const id = 12345
+                return supertest(app)
+                    .get(`/api/reflections/${id}`)
+                    .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                    .expect(404, {
+                        error: { message: 'Reflection not found' }
+                    })
+            })
+        })
+
+        context('Given there are reflections in the database', () => {
+            const testUsers = makeUsersArray()
+            const testReflections = makeReflectionsArray()
+
+            beforeEach('insert reflections', () => {
+                return db
+                    .into('users')
+                    .insert(testUsers)
+                    .then(() => {
+                        return db
+                            .into('reflections')
+                            .insert(testReflections)
+                    })
+            })
+
+            it('responds with a 200 and the reflection with id', () => {
+                const idToGet = 2
+                const expectedReflection = testReflections[idToGet - 1]
+
+                return supertest(app)
+                    .get(`/api/reflections/${idToGet}`)
+                    .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                    .expect(200, expectedReflection)
             })
         })
     })
