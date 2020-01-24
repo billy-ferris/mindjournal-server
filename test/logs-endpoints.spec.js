@@ -5,7 +5,7 @@ const app = require('../src/app')
 const { makeUsersArray } = require('./users.fixtures')
 const { makeLogsArray } = require('./logs.fixtures')
 
-describe.only('Logs Endpoints', function() {
+describe('Logs Endpoints', function() {
     let db
 
     before('make knex instance', () => {
@@ -19,6 +19,8 @@ describe.only('Logs Endpoints', function() {
     after('disconnect from db', () => db.destroy())
 
     before('clean the table', () =>  db.raw('TRUNCATE logs, reflections, users'))
+
+    afterEach('clean the table', () =>  db.raw('TRUNCATE logs, reflections, users'))
 
     describe(`GET /api/logs`, () => {
         context('Given no logs', () => {
@@ -50,6 +52,67 @@ describe.only('Logs Endpoints', function() {
                     .get('/api/logs')
                     .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
                     .expect(200, testLogs)
+            })
+        })
+    })
+
+    describe.only(`POST /api/logs`, () => {
+        const testUsers = makeUsersArray()
+
+        beforeEach('insert users', () => {
+            return db
+                .into('users')
+                .insert(testUsers)
+        })
+
+        it('creates a log, responding with 201 and the new log', () => {
+            const newLog = {
+                content: 'Testing log entry',
+                mood: 'Neutral',
+                user_id: 1
+            }
+            return supertest(app)
+                .post('/api/logs')
+                .send(newLog)
+                .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                .expect(201)
+                .expect(res => {
+                    expect(res.body.content).to.eql(newLog.content)
+                    expect(res.body.mood).to.eql(newLog.mood)
+                    expect(res.body.user_id).to.eql(newLog.user_id)
+                    expect(res.body).to.have.property('id')
+                    expect(res.header.location).to.eql(`/api/logs/${res.body.id}`)
+                    const expected = new Date().toLocaleDateString()
+                    const actual = new Date(res.body.created_at).toLocaleDateString()
+                    expect(actual).to.eql(expected)
+                })
+                .then(postRes =>
+                    supertest(app)
+                        .get(`/api/logs/${postRes.body.id}`)
+                        .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                        .expect(postRes.body)
+                )
+        })
+
+        const requiredFields = ['content', 'mood', 'user_id']
+
+        requiredFields.forEach(field => {
+            const newLog = {
+                content: 'POST test log',
+                mood: 'Neutral',
+                user_id: 1
+            }
+
+            it('responds with 400 and an error when the field is missing', () => {
+                delete newLog[field]
+
+                return supertest(app)
+                    .post('/api/logs')
+                    .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                    .send(newLog)
+                    .expect(400, {
+                        error: { message: `Missing '${field}' in request body` }
+                    })
             })
         })
     })
