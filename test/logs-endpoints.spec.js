@@ -56,7 +56,7 @@ describe('Logs Endpoints', function() {
         })
     })
 
-    describe.only(`POST /api/logs`, () => {
+    describe(`POST /api/logs`, () => {
         const testUsers = makeUsersArray()
 
         beforeEach('insert users', () => {
@@ -113,6 +113,52 @@ describe('Logs Endpoints', function() {
                     .expect(400, {
                         error: { message: `Missing '${field}' in request body` }
                     })
+            })
+        })
+    })
+
+    describe(`DELETE /api/logs/:id`, () => {
+        context('Given no logs', () => {
+            it('responds with 404', () => {
+                const id = 12345
+                return supertest(app)
+                    .delete(`/api/logs/${id}`)
+                    .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                    .expect(404, {
+                        error: { message: 'Log not found' }
+                    })
+            })
+        })
+
+        context('Given there are logs in the database', () => {
+            const testUsers = makeUsersArray()
+            const testLogs = makeLogsArray()
+
+            beforeEach('insert logs', () => {
+                return db
+                    .into('users')
+                    .insert(testUsers)
+                    .then(() => {
+                        return db
+                            .into('logs')
+                            .insert(testLogs)
+                    })
+            })
+
+            it('responds with 204 and removes the log', () => {
+                const idToDelete = 2
+                const expectedLogs = testLogs.filter(log => log.id !== idToDelete)
+
+                return supertest(app)
+                    .delete(`/api/logs/${idToDelete}`)
+                    .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                    .expect(204)
+                    .then(res => 
+                        supertest(app)
+                            .get('/api/logs')
+                            .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                            .expect(expectedLogs)
+                    )
             })
         })
     })

@@ -64,5 +64,13 @@ logsRouter
     .get((req, res) => {
         res.json(serializeLog(res.log))
     })
+    .delete((req, res, next) => {
+        const { id } = req.params
+        LogsService.deleteLog(req.app.get('db'), id)
+            .then(() => {
+                res.status(204).end()
+            })
+            .catch(next)
+    })
 
 module.exports = logsRouter

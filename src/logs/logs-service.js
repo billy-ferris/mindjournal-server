@@ -14,6 +14,11 @@ const LogsService = {
                 return rows[0]
             })
     },
+    deleteLog(knex, id) {
+        return knex('logs')
+            .where({ id })
+            .delete()
+    }
 }
 
 module.exports = LogsService
