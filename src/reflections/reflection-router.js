@@ -3,6 +3,7 @@ const ReflectionsService = require('./reflection-service')
 const path = require('path')
 
 const reflectionsRouter = express.Router()
+const jsonParser = express.json()
 
 reflectionsRouter
     .route('/')
@@ -12,6 +13,27 @@ reflectionsRouter
             res.json(reflections)
         })
         .catch(next)
+    })
+    .post(jsonParser, (req, res, next) => {
+        const { title, content, last_edited, user_id } = req.body
+        const newReflection = { title, content, user_id }
+
+        for (const [key, value] of Object.entries(newReflection))
+            if (value == null)
+                return res.status(400).json({
+                    error: { message: `Missing '${key}' in request body` }
+                })
+
+        newReflection.last_edited = last_edited
+
+        ReflectionsService.insertReflection(req.app.get('db'), newReflection)
+                .then(reflection => {
+                    res
+                        .status(201)
+                        .location(path.posix.join(req.originalUrl, `/${reflection.id}`))
+                        .json(reflection)
+                })
+                .catch(next)
     })
 
 reflectionsRouter
