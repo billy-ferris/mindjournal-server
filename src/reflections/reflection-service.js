@@ -14,6 +14,11 @@ const ReflectionsService = {
                 return rows[0]
             })
     },
+    deleteReflection(knex, id) {
+        return knex('reflections')
+            .where({ id })
+            .delete()
+    }
 }
 
 module.exports = ReflectionsService

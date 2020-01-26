@@ -94,7 +94,7 @@ describe('Reflections Endpoints', function() {
             })
         })
 
-        describe.only(`POST /api/reflections`, () => {
+        describe(`POST /api/reflections`, () => {
             const testUsers = makeUsersArray()
 
             beforeEach('insert user', () => {
@@ -151,6 +151,52 @@ describe('Reflections Endpoints', function() {
                         .expect(400, {
                             error: { message: `Missing '${field}' in request body` }
                         })
+                })
+            })
+        })
+
+        describe(`DELETE /api/reflections/:id`, () => {
+            context('Given no reflections', () => {
+                it('responds with a 404', () => {
+                    const id = 12345
+                    return supertest(app)
+                        .get(`/api/reflections/${id}`)
+                        .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                        .expect(404, {
+                            error: { message: 'Reflection not found' }
+                        })
+                })
+            })
+    
+            context('Given there are reflections in the database', () => {
+                const testUsers = makeUsersArray()
+                const testReflections = makeReflectionsArray()
+
+                beforeEach('insert logs', () => {
+                    return db
+                        .into('users')
+                        .insert(testUsers)
+                        .then(() => {
+                            return db
+                                .into('reflections')
+                                .insert(testReflections)
+                        })
+                })
+
+                it('responds with a 204 and removes the log', () => {
+                    const idToDelete = 2
+                    const expectedReflections = testReflections.filter(reflection => reflection.id !== idToDelete)
+
+                    return supertest(app)
+                        .delete(`/api/reflections/${idToDelete}`)
+                        .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                        .expect(204)
+                        .then(res => 
+                            supertest(app)
+                                .get('/api/reflections')
+                                .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                                .expect(expectedReflections)
+                        )
                 })
             })
         })
