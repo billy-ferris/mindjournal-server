@@ -1,16 +1,25 @@
 const express = require('express')
 const ReflectionsService = require('./reflection-service')
 const path = require('path')
+const xss = require('xss')
 
 const reflectionsRouter = express.Router()
 const jsonParser = express.json()
+
+const serializeReflection = reflection => ({
+    id: reflection.id,
+    title: xss(reflection.title),
+    content: xss(reflection.content),
+    last_edited: reflection.last_edited,
+    user_id: reflection.user_id
+})
 
 reflectionsRouter
     .route('/')
     .get((req, res, next) => {
         ReflectionsService.getAllReflections(req.app.get('db'))
         .then(reflections => {
-            res.json(reflections)
+            res.json(reflections.map(serializeReflection))
         })
         .catch(next)
     })
@@ -53,7 +62,7 @@ reflectionsRouter
             .catch(next)
     })
     .get((req, res) => {
-        res.json(res.reflection)
+        res.json(serializeReflection(res.reflection))
     })
     .delete((req, res, next) => {
         const { id } = req.params
