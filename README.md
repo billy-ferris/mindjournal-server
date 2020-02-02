@@ -1,26 +1,34 @@
-# Express Boilerplate!
+# MindJournal
+> All-in-one journal for individuals
 
-This is a boilerplate project used for starting new projects!
+With MindJournal, users can jot down their experiences, situations and lessons and associate them with a certain emotion that describes how they felt in that moment. Users can filter by specific emotions or search entries and better map out their journey by using their previous journals to help better their future however they please.
 
-## Set up
+Live App Link: https://mindjournal.now.sh/
 
-Complete the following steps to start a new project (NEW-PROJECT-NAME):
+![Logs List With Filters](/screenshots/logs-with-filter.png)
 
-1. Clone this repository to your local machine `git clone BOILERPLATE-URL NEW-PROJECTS-NAME`
-2. `cd` into the cloned repository
-3. Make a fresh start of the git history for this project with `rm -rf .git && git init`
-4. Install the node dependencies `npm install`
-5. Move the example Environment file to `.env` that will be ignored by git and read by the express server `mv example.env .env`
-6. Edit the contents of the `package.json` to use NEW-PROJECT-NAME instead of `"name": "express-boilerplate",`
+![Main Reflections List](/screenshots/reflections-list.png)
 
-## Scripts
+# API Documentation
 
-Start the application `npm start`
+GET /api/logs - Gets all logs
 
-Start nodemon for the application `npm run dev`
+GET /api/logs/:id - Get log by id
 
-Run the tests `npm test`
+POST /api/logs - Creates new log
 
-## Deploying
+DELETE /api/logs/:id - Deletes log with id
 
-When your new project is ready for deployment, add a new Heroku application with `heroku create`. This will make a new git remote called "heroku" and you can then `npm run deploy` which will push to this remote's master branch.
+GET /api/reflections - Gets all reflections
+
+GET /api/reflections/:id - Get reflection by id
+
+POST /api/reflections - Creates new reflection
+
+DELETE /api/reflections/:id - Deletes reflection with id
+
+# Technology Used
+
+* React
+* Node/Express
+* PostgreSQL
