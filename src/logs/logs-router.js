@@ -1,3 +1,4 @@
+process.env.TZ = 'UTC';
 const express = require('express');
 const LogsService = require('./logs-service');
 const path = require('path');
